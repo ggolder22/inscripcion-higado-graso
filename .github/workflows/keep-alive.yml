@@ -1,0 +1,26 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Corre cada 4 días a las 08:00 UTC
+    - cron: '0 8 */4 * *'
+  workflow_dispatch: # permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_inscripciones_count" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json")
+          echo "Respuesta Supabase: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Error: el ping devolvió HTTP $STATUS"
+            exit 1
+          fi
+          echo "Ping exitoso, proyecto activo."
